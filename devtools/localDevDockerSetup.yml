@@ -1,0 +1,19 @@
+##running Postgres and Redis in a Docker
+version: '3.7'
+services:
+  version-control-data-fetcher:
+    container_name: version-control-data-fetcher
+    image: "postgres:14-alpine"
+    environment:
+      - POSTGRES_USER=version_control_user
+      - POSTGRES_PASSWORD=version_control_pass
+      - POSTGRES_DB=version_control_db
+    expose:
+      - 9231
+    ports:
+      - 9231:5432
+    volumes:
+      - version-control-db-data:/var/lib/postgresql/data
+
+volumes:
+  version-control-db-data:
