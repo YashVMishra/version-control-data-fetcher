@@ -1,0 +1,42 @@
+# Enhanced GraphQL Schema to capture all patch data
+
+type Query {
+    repoData(repoUrl: String!, userId: ID!): [ContributorWithCommits!]!
+    checkAccess(repoUrl: String!, userId: ID!): Boolean!
+}
+
+type RepoAccessResponse {
+    hasAccess: Boolean!
+    message: String!
+    repoName: String
+    owner: String
+    isPrivate: Boolean
+}
+
+type ContributorWithCommits {
+    authorName: String!
+    githubUrl: String!
+    contributions: Int!
+    commits: [Commit!]!
+}
+
+type Commit {
+    msg: String!
+    sha: String!
+    date: String!
+    files: [FileData!]!
+}
+
+# Enhanced FileData type to capture all patch information
+type FileData {
+    fileName: String!
+    fullPath: String           # Full file path in repository
+    extension: String!
+    operation: String!         # added, modified, deleted, renamed
+    code: String!              # The actual patch/diff data
+    additions: Int!            # Number of lines added
+    deletions: Int!            # Number of lines deleted
+    changes: Int               # Total changes (additions + deletions)
+    binaryFile: Boolean        # Whether this is a binary file
+    previousFilename: String   # Previous filename if renamed
+}
