@@ -42,7 +42,7 @@ public class GithubController implements GithubAPI {
 		if (userId != null) {
 			githubAuthUrl += "&state=" + userId;
 		}
-//		response.sendRedirect(githubAuthUrl);
+
 		return githubAuthUrl;
 	}
 
@@ -92,14 +92,7 @@ public class GithubController implements GithubAPI {
 		try {
 			Optional<VCToken> token = githubService.getTokenByUserId(userId);
 			if (token.isPresent()) {
-//				return ResponseEntity.ok().body(Map.of(
-//						"has_token", true,
-//						"user_id", userId,
-//						"token_id", token.get().getId()
-//				));
-
 				return ResponseEntity.status(HttpStatus.OK).build();
-
 			} else {
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 

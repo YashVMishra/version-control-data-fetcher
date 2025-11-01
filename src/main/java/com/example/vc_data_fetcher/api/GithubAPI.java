@@ -1,6 +1,5 @@
 package com.example.vc_data_fetcher.api;
 
-import com.example.vc_data_fetcher.model.VCToken;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -11,7 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FileData {
-	// Getters and Setters
 	private String fileName;
 	private String fullPath;        // NEW: Full file path in repository
 	private String extension;
