@@ -2,7 +2,6 @@ package com.example.vc_data_fetcher.controller;
 
 import com.example.vc_data_fetcher.dto.CheckAccessRequest;
 import com.example.vc_data_fetcher.dto.ContributorWithCommits;
-import com.example.vc_data_fetcher.dto.RepoAccessResponse;
 import com.example.vc_data_fetcher.service.VCDataService;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;

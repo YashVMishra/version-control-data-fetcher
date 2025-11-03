@@ -1,0 +1,294 @@
+openapi: 3.0.1
+info:
+  title: VC Data Fetcher API
+  description: |
+    REST API documentation for GitHub OAuth and Repository Data endpoints.  
+    For GraphQL schema explorer, visit: [GraphiQL UI](http://localhost:8081/graphiql)
+  version: 1.0.0
+servers:
+  - url: http://localhost:8081
+    description: Local server
+tags:
+  - name: GitHub Authentication
+    description: Handles GitHub OAuth and token management
+  - name: Repository Data
+    description: Endpoints to validate access and fetch contributors with commits
+
+paths:
+  /api/repo-validate:
+    post:
+      tags:
+        - Repository Data
+      summary: Check Repository Access (REST)
+      description: POST endpoint version of repository access validation.
+      operationId: checkAccess
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckAccessRequest"
+      responses:
+        "200":
+          description: Access verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepoAccessResponse"
+        "400":
+          description: Invalid repository URL
+        "500":
+          description: Unexpected error
+
+  /api/auth/github-login:
+    get:
+      tags:
+        - GitHub Authentication
+      summary: Get GitHub Login URL
+      description: Generates the GitHub OAuth login URL for a given user ID.
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Successfully generated GitHub login URL
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /api/auth/get-token:
+    get:
+      tags:
+        - GitHub Authentication
+      summary: Retrieve Stored GitHub Token
+      description: Fetches the stored GitHub access token for a user.
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Token retrieved successfully
+        "404":
+          description: Token not found for user
+        "500":
+          description: Error retrieving token
+
+  /api/auth/exchange-token:
+    get:
+      tags:
+        - GitHub Authentication
+      summary: Exchange GitHub Code for Access Token
+      description: Exchanges the temporary OAuth code for a permanent access token.
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Token exchanged and stored successfully
+        "500":
+          description: Failed to exchange code for token
+
+  /api/auth/check-token:
+    get:
+      tags:
+        - GitHub Authentication
+      summary: Check if Token Exists
+      description: Checks whether a valid GitHub token exists for a user.
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Valid token found
+        "401":
+          description: Token not found or unauthorized
+
+  /api/auth/callback:
+    get:
+      tags:
+        - GitHub Authentication
+      summary: Handle GitHub OAuth Callback
+      description: Handles the callback from GitHub and exchanges the code for an access token.
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirects user to frontend after token exchange
+
+components:
+  schemas:
+    VCToken:
+      type: object
+      description: Entity representing a user's stored GitHub access token and related metadata.
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the stored token.
+          example: 1
+        user_id:
+          type: integer
+          format: int64
+          description: Unique identifier of the user associated with the GitHub token.
+          example: 6
+        access_token:
+          type: string
+          description: GitHub OAuth access token for the user.
+          example: gho_xxxxxxxxxxxxxxxxxxxxxxxx
+        misc_info:
+          type: string
+          description: Additional information returned from GitHub during the OAuth flow.
+          example: "scope:repo,user;token_type:bearer;"
+
+    CheckAccessRequest:
+      type: object
+      description: Request payload for checking user access to a GitHub repository.
+      properties:
+        repoUrl:
+          type: string
+          example: https://github.com/octocat/Hello-World
+        userId:
+          type: integer
+          format: int64
+          example: 6
+
+    Contributor:
+      type: object
+      description: Basic contributor information.
+      properties:
+        authorName:
+          type: string
+          example: octocat
+        githubUrl:
+          type: string
+          example: https://github.com/octocat
+        contributions:
+          type: integer
+          example: 42
+
+    Commit:
+      type: object
+      description: Commit details including message, hash, and associated file changes.
+      properties:
+        msg:
+          type: string
+          example: Fixed bug in parser
+        sha:
+          type: string
+          example: a1b2c3d4
+        date:
+          type: string
+          example: 2025-01-01T12:34:56Z
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileData"
+
+    FileData:
+      type: object
+      description: File-level change data in a commit.
+      properties:
+        fileName:
+          type: string
+          example: index.js
+        fullPath:
+          type: string
+          example: src/main/java/com/example/App.java
+        extension:
+          type: string
+          example: .java
+        operation:
+          type: string
+          example: modified
+        code:
+          type: string
+          example: "@@ -1,5 +1,6 @@"
+        additions:
+          type: integer
+          example: 10
+        deletions:
+          type: integer
+          example: 3
+        changes:
+          type: integer
+          example: 13
+        binaryFile:
+          type: boolean
+          example: false
+        previousFilename:
+          type: string
+          example: OldFileName.java
+
+    ContributorWithCommits:
+      type: object
+      description: Contributor along with all their commits.
+      properties:
+        authorName:
+          type: string
+        githubUrl:
+          type: string
+        contributions:
+          type: integer
+        commits:
+          type: array
+          items:
+            $ref: "#/components/schemas/Commit"
+
+    CommitsResponse:
+      type: object
+      description: Response object containing a list of commits for a specific author.
+      properties:
+        commitList:
+          type: array
+          description: List of commits associated with the author.
+          items:
+            $ref: "#/components/schemas/Commit"
+        authorName:
+          type: string
+          description: Name of the author whose commits are listed.
+          example: octocat
+        totalCommits:
+          type: integer
+          description: Total number of commits by this author.
+          example: 27
+
+    ContributorsResponse:
+      type: object
+      description: Response containing a list of all contributors for a repository.
+      properties:
+        contributorList:
+          type: array
+          description: List of contributors for the repository.
+          items:
+            $ref: "#/components/schemas/Contributor"
